@@ -75,7 +75,7 @@ public class AutoAccept extends JFrame {
     }
 
     private void loadAcceptButtonImage() {
-        templateImage = Imgcodecs.imread(TEMPLATE_IMAGE_PATH);
+        templateImage = Imgcodecs.imread(this.getClass().getResource(TEMPLATE_IMAGE_PATH).getPath());
         if (templateImage.empty()) {
             JOptionPane.showMessageDialog(this,
                     "Template image not found: " + TEMPLATE_IMAGE_PATH,

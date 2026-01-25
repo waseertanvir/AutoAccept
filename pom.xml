@@ -12,6 +12,15 @@
 
   <version>${revision}</version>
 
+  <profiles>
+    <profile>
+      <id>release</id>
+      <properties>
+        <revision>1.0.0</revision>
+      </properties>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
       <plugin>

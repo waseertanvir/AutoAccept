@@ -22,7 +22,7 @@
 
 ### Running the Application
 
-Download the latest executable for your platform from the [Releases](https://github.com/yourusername/cs2-auto-accept/releases) page.
+Download the latest executable for your platform from the [Releases](https://github.com/waseertanvir/AutoAccept/releases) page.
 
 **Windows:**
 - Download `CS2AutoAccept.exe`

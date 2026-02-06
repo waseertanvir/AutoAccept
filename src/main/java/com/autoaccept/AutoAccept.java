@@ -13,9 +13,6 @@ import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Paths;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,9 +27,9 @@ public class AutoAccept extends JFrame {
     private static JButton stopButton;
     private Timer screenshotTimer;
     private Robot robot;
-    private Mat templateImage;
     private static final double MATCH_THRESHOLD = 0.8;
-    private static final String TEMPLATE_IMAGE_PATH = "/cs2_accept_button.png";
+    private static final String CS2_ACCEPT_BUTTON_PNG = "/cs2_accept_button.png";
+    private static final String CS2_ACCEPT_SELECTED_BUTTON_PNG = "/cs2_accept_selected_button.png";
 
     static {
         nu.pattern.OpenCV.loadLocally();
@@ -51,8 +48,6 @@ public class AutoAccept extends JFrame {
             e.printStackTrace();
             System.exit(1);
         }
-
-        loadAcceptButtonImage();
 
         JLabel messageLabel = new JLabel(
                 "<html><div style='text-align: center;'>" +
@@ -81,28 +76,34 @@ public class AutoAccept extends JFrame {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    private void loadAcceptButtonImage() {
-        try (final InputStream is = this.getClass().getResourceAsStream(TEMPLATE_IMAGE_PATH)) {
+    private Mat loadImage(final String imagePath) {
+        final Mat templateImage;
+
+        try (final InputStream is = this.getClass().getResourceAsStream(imagePath)) {
             if (is == null) {
-                showTemplateNotFoundError();
-                return;
+                showTemplateNotFoundError(imagePath);
+                return null;
             }
 
             byte[] imageBytes = is.readAllBytes();
             templateImage = Imgcodecs.imdecode(new MatOfByte(imageBytes), Imgcodecs.IMREAD_COLOR);
 
             if (templateImage.empty()) {
-                showTemplateNotFoundError();
+                showTemplateNotFoundError(imagePath);
             }
+
+            return templateImage;
         } catch (final IOException e) {
-            showTemplateNotFoundError();
+            showTemplateNotFoundError(imagePath);
             e.printStackTrace();
         }
+
+        return null;
     }
 
-    private void showTemplateNotFoundError() {
+    private void showTemplateNotFoundError(final String imagePath) {
         JOptionPane.showMessageDialog(this,
-                "Template image not found: " + TEMPLATE_IMAGE_PATH,
+                "Template image not found: " + imagePath,
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
     }
@@ -147,29 +148,42 @@ public class AutoAccept extends JFrame {
             // Load screenshot as OpenCV Mat
             Mat screenMat = Imgcodecs.imread(tempFile.getAbsolutePath());
 
+            final Mat cs2AcceptButton = loadImage(CS2_ACCEPT_BUTTON_PNG);
+            final Mat cs2AcceptSelectedButton = loadImage(CS2_ACCEPT_SELECTED_BUTTON_PNG);
+
             // Perform template matching
-            Point matchLocation = findTemplate(screenMat, templateImage);
+            Point matchLocation;
 
-            if (matchLocation != null) {
-                int clickX = matchLocation.x + templateImage.cols() / 2;
-                int clickY = matchLocation.y + templateImage.rows() / 2;
+            matchLocation = findTemplate(screenMat, cs2AcceptButton);
+            performClick(matchLocation, cs2AcceptButton);
 
-                robot.mouseMove(clickX, clickY);
-
-                for (int i = 0; i < NUMBER_OF_CLICKS; i++) {
-                    robot.delay(100);
-                    robot.mousePress(java.awt.event.InputEvent.BUTTON1_DOWN_MASK);
-                    robot.mouseRelease(java.awt.event.InputEvent.BUTTON1_DOWN_MASK);
-                }
-
-                System.out.println("Button clicked at: " + clickX + ", " + clickY);
-            }
+            matchLocation = findTemplate(screenMat, cs2AcceptSelectedButton);
+            performClick(matchLocation, cs2AcceptButton);
 
             tempFile.delete();
             screenMat.release();
         } catch (final Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void performClick(Point matchLocation, Mat cs2AcceptButton) {
+        if (matchLocation == null) {
+            return;
+        }
+
+        final int clickX = matchLocation.x + cs2AcceptButton.cols() / 2;
+        final int clickY = matchLocation.y + cs2AcceptButton.rows() / 2;
+
+        robot.mouseMove(clickX, clickY);
+
+        for (int i = 0; i < NUMBER_OF_CLICKS; i++) {
+            robot.delay(100);
+            robot.mousePress(java.awt.event.InputEvent.BUTTON1_DOWN_MASK);
+            robot.mouseRelease(java.awt.event.InputEvent.BUTTON1_DOWN_MASK);
+        }
+
+        System.out.println("Button clicked at: " + clickX + ", " + clickY);
     }
 
     private Point findTemplate(final Mat source, final Mat template) {

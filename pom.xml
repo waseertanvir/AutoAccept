@@ -7,7 +7,7 @@
     <url>http://maven.apache.org</url>
 
     <properties>
-        <revision>1.0.0-SNAPSHOT</revision>
+        <revision>1.0.1-SNAPSHOT</revision>
     </properties>
 
     <version>${revision}</version>
@@ -20,7 +20,7 @@
         <profile>
             <id>release</id>
             <properties>
-                <revision>1.0.0</revision>
+                <revision>1.0.1</revision>
             </properties>
         </profile>
     </profiles>
